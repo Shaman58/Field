@@ -19,38 +19,37 @@ namespace algoritm
             WordsAndColors[] words = wordsCreate.Words;
 
 
-            InitCharsArrayInField(field);
+            FeelRandomCharsArrayInField(field);
             FeelingArrayWordsInField(field, words);
             PrintField(field);
+            Console.WriteLine("DONE!");
         }
 
+
+        /// <summary>
+        /// try feel field 
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="words"></param>
         private static void FeelingArrayWordsInField(FieldItem[,] field, WordsAndColors[] words)
         {
-            while (FeelingWordsInField(field, words))
+            while (!FeelingWordsInField(field, words))
             {
-                InitCharsArrayInField(field);
+                FeelRandomCharsArrayInField(field);
                 Console.WriteLine("one more try");
             }
         }
 
-        static FieldItem[,] InitCharsArrayInField(FieldItem[,] field)
+        /// <summary>
+        /// feel random chars to field
+        /// </summary>
+        /// <param name="field"></param>
+        /// <returns></returns>
+        static FieldItem[,] FeelRandomCharsArrayInField(FieldItem[,] field)
         {
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
             Random random = new Random();
             char[] letters;
-
-            switch (cultureInfo.TwoLetterISOLanguageName)
-            {
-                case "ru":
-                    letters = Enumerable.Range('а', 'я' - 'а' + 1).Select(a => (char)a).ToArray();
-                    break;
-                case "en":
-                    letters = Enumerable.Range('a', 'z' - 'a' + 1).Select(a => (char)a).ToArray();
-                    break;
-                default:
-                    letters = Enumerable.Range('a', 'z' - 'a' + 1).Select(a => (char)a).ToArray();
-                    break;
-            }
+            letters = ReturnLocalAlphabet();
 
             for (int i = 0; i < field.GetLength(0); i++)
             {
@@ -68,6 +67,34 @@ namespace algoritm
             return field;
         }
 
+        /// <summary>
+        /// Localiztion
+        /// </summary>
+        /// <returns></returns>
+        static char[] ReturnLocalAlphabet()
+        {
+            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
+            char[] letters;
+
+            switch (cultureInfo.TwoLetterISOLanguageName)
+            {
+                case "ru":
+                    letters = Enumerable.Range('а', 'я' - 'а' + 1).Select(a => (char)a).ToArray();
+                    break;
+                case "en":
+                    letters = Enumerable.Range('a', 'z' - 'a' + 1).Select(a => (char)a).ToArray();
+                    break;
+                default:
+                    letters = Enumerable.Range('a', 'z' - 'a' + 1).Select(a => (char)a).ToArray();
+                    break;
+            }
+            return letters;
+        }
+
+        /// <summary>
+        /// print any field
+        /// </summary>
+        /// <param name="field"></param>
         private static void PrintField(FieldItem[,] field)
         {
             for (int i = 0; i < field.GetLength(0); i++)
@@ -87,22 +114,26 @@ namespace algoritm
             FieldItem[,] saveField = new FieldItem[field.GetLength(0), field.GetLength(1)];
 
             for (int o = 0; o < words.Length; o++)
-            {
+            {                
                 ArrayCopy(field, saveField);
                 for (int i = 0; i < 10; i++)
                 {
-                    if (TryFeelOneWordInFieldUp(field, words[o]))
+                    Console.WriteLine("попытка засунуть слово {0}    N {1}", words[o].Word, i);
+                    if (TryFeelOneWordInFieldUp(field, words[o]))                    
                         break;
 
-                    ArrayCopy(saveField, field);
+                    Console.WriteLine("попытка засунуть слово {0} не удалась", words[o].Word);
+
+                    ArrayCopy(saveField, field);                    
                 }
-            }
-            Console.WriteLine("return false");
+            }            
             return false;
         }
-        
 
-        //Не вышло делать Array.Copy эта зараза копирует ссылки на экзэмпляры объектов FieldItems в управляемой куче.
+
+        /// <summary>
+        /// copy DATA(not references) from source array to target array
+        /// </summary>        
         private static FieldItem[,] ArrayCopy(FieldItem[,] sourceArray, FieldItem[,] targetArray)
         {
             for (int i = 0; i < sourceArray.GetLength(0); i++)
@@ -112,7 +143,10 @@ namespace algoritm
                     targetArray[i, j] = new FieldItem
                     {
                         Letter = sourceArray[i, j].Letter,
-                        ConsoleColor = sourceArray[i, j].ConsoleColor
+                        ConsoleColor = sourceArray[i, j].ConsoleColor,
+                        XCord = sourceArray[i, j].XCord,
+                        YCord = sourceArray[i, j].YCord
+
                     };
                 }
             }
@@ -127,8 +161,8 @@ namespace algoritm
 
             for (int i = 0; i < word.Word.Length; i++)
             {
-                Console.WriteLine("TryFeelOneWordInFieldUp " + i);
-                nowFieldItem = SearchFreeField(field, nowFieldItem, i == 0);
+                Console.WriteLine("попытка засунуть {0} букву", i);
+                nowFieldItem = SearchFreeFieldOrReturnNullIfEmpty(field, nowFieldItem, i == 0);
                 if (nowFieldItem == null)
                     return false;
 
@@ -140,7 +174,7 @@ namespace algoritm
             return true;
         }
 
-        private static FieldItem SearchFreeField(FieldItem[,] field, FieldItem fieldItem, bool isFirstChar)
+        private static FieldItem SearchFreeFieldOrReturnNullIfEmpty(FieldItem[,] field, FieldItem fieldItem, bool isFirstChar)
         {
 
             Random random = new Random();
@@ -148,31 +182,26 @@ namespace algoritm
             FieldItem targetFreeField;
 
             if (!isFirstChar)
-            {
-                GenerateListOfFreeNaighbours(field, fieldItem);
-                if ((fieldItem.XCord - 1) >= 0 &&
-                    field[fieldItem.XCord - 1, fieldItem.YCord].ConsoleColor == ConsoleColor.White)
-                    listOfFieldsFreeNeighbours.Add(field[fieldItem.XCord - 1, fieldItem.YCord]);
-                if ((fieldItem.XCord + 1) < field.GetLength(0) &&
-                    field[fieldItem.XCord + 1, fieldItem.YCord].ConsoleColor == ConsoleColor.White)
-                    listOfFieldsFreeNeighbours.Add(field[fieldItem.XCord + 1, fieldItem.YCord]);
-                if ((fieldItem.YCord - 1) >= 0 &&
-                    field[fieldItem.XCord, fieldItem.YCord - 1].ConsoleColor == ConsoleColor.White)
-                    listOfFieldsFreeNeighbours.Add(field[fieldItem.XCord, fieldItem.YCord - 1]);
-                if ((fieldItem.YCord + 1) < field.GetLength(1) &&
-                    field[fieldItem.XCord, fieldItem.YCord + 1].ConsoleColor == ConsoleColor.White)
-                    listOfFieldsFreeNeighbours.Add(field[fieldItem.XCord, fieldItem.YCord + 1]);
+            {                
+                listOfFieldsFreeNeighbours = GenerateListOfFreeNaighbours(field, fieldItem);
 
-                if (listOfFieldsFreeNeighbours.Count != 0)                    
+                if (listOfFieldsFreeNeighbours.Count != 0)
                     targetFreeField = RandomFieldItem(listOfFieldsFreeNeighbours);
                 else targetFreeField = null; // говнокод. Налл возвращать нельзя.                
             }
             else
-                targetFreeField = RandomFieldItem(field);
+                targetFreeField = RandomFieldItem(field);           
 
             return targetFreeField;
         }
 
+
+        /// <summary>
+        /// returns List of FieldItems what are white neighbours
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="fieldItem"></param>
+        /// <returns></returns>
         private static List<FieldItem> GenerateListOfFreeNaighbours(FieldItem[,] field, FieldItem fieldItem)
         {
             List<FieldItem> listOfFieldsFreeNeighbours = new List<FieldItem>();
@@ -190,10 +219,19 @@ namespace algoritm
                 listOfFieldsFreeNeighbours.Add(field[fieldItem.XCord, fieldItem.YCord + 1]);
             return listOfFieldsFreeNeighbours;
         }
+
+
+
+        /// <summary>
+        /// return random FieldItem in income array of FieldItems or list of FieldItems
+        /// </summary>
+        /// <param name="field"></param>
+        /// <returns></returns>
+
         private static FieldItem RandomFieldItem(FieldItem[,] field)
         {
             List<FieldItem> freeFieldItems = new List<FieldItem>();
-            Random random = new Random();
+            Random random = new Random();            
             foreach (var item in field)
             {
                 if (item.ConsoleColor == ConsoleColor.White)
@@ -204,12 +242,11 @@ namespace algoritm
             return freeFieldItems[random.Next(freeFieldItems.Count)];
         }
         private static FieldItem RandomFieldItem(List<FieldItem> field)
-        {            
-            Random random = new Random();
-         
+        {
+            Random random = new Random();            
             return field[random.Next(field.Count)];
         }
 
     }
-  
+
 }
