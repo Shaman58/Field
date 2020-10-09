@@ -12,7 +12,7 @@ namespace Field
                 new WordsAndColors("нянька", ConsoleColor.Green),
                 new WordsAndColors("глушитель", ConsoleColor.Blue),
                 new WordsAndColors("затычка", ConsoleColor.DarkYellow),
-                new WordsAndColors("херзнаетчоуже", ConsoleColor.Cyan)
+                new WordsAndColors("херзнает", ConsoleColor.Cyan)
             };
 
         public WordsAndColors[] Words => _words;

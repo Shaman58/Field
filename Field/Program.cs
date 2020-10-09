@@ -33,7 +33,7 @@ namespace algoritm
         /// <param name="words"></param>
         private static void FeelingArrayWordsInField(FieldItem[,] field, WordsAndColors[] words)
         {
-            while (!FeelingWordsInField(field, words))
+            while (FeelingWordsInField(field, words))
             {
                 FeelRandomCharsArrayInField(field);
                 Console.WriteLine("one more try");
@@ -111,22 +111,29 @@ namespace algoritm
 
         private static bool FeelingWordsInField(FieldItem[,] field, WordsAndColors[] words)
         {
-            FieldItem[,] saveField = new FieldItem[field.GetLength(0), field.GetLength(1)];
-
+            FieldItem[,,] arraySavePool = new FieldItem[5, field.GetLength(0), field.GetLength(1)];
             for (int o = 0; o < words.Length; o++)
-            {                
-                ArrayCopy(field, saveField);
-                for (int i = 0; i < 10; i++)
-                {
-                    Console.WriteLine("попытка засунуть слово {0}    N {1}", words[o].Word, i);
-                    if (TryFeelOneWordInFieldUp(field, words[o]))                    
-                        break;
-
-                    Console.WriteLine("попытка засунуть слово {0} не удалась", words[o].Word);
-
-                    ArrayCopy(saveField, field);                    
-                }
+            {
+                FeelOneWordTryesController(field, words[o]);                                
             }            
+            return false;
+        }
+
+        private static bool FeelOneWordTryesController(FieldItem[,] field, WordsAndColors word)
+        {
+            FieldItem[,] saveField = new FieldItem[field.GetLength(0), field.GetLength(1)];
+            ArrayCopy(field, saveField);
+            for (int tryes = 0; tryes < 10; tryes++)
+            {
+                Console.WriteLine("попытка засунуть слово {0}    N {1}", word.Word, tryes);
+                if (TryFeelOneWordInFieldUp(field, word))
+                    return true;
+
+                Console.WriteLine("попытка засунуть слово {0} не удалась", word.Word);
+
+                ArrayCopy(saveField, field);
+            }
+
             return false;
         }
 
@@ -153,11 +160,11 @@ namespace algoritm
             return targetArray;
         }
 
+        
+
         private static bool TryFeelOneWordInFieldUp(FieldItem[,] field, WordsAndColors word)
         {
-            FieldItem nowFieldItem = new FieldItem();
-
-            //ArrayCopy(field, saveField);
+            FieldItem nowFieldItem = new FieldItem();            
 
             for (int i = 0; i < word.Word.Length; i++)
             {
